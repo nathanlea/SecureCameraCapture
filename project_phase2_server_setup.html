@@ -1,0 +1,132 @@
+---
+layout: default
+title: Project -- Phase 2 -- Server Setup
+---
+<section class="bg-dark">
+  <div class="text-center">
+    <h1>Secure Server Configuration Instructions</h1>
+  </div>
+</section>
+
+<section class="bg-primary" id="phase2">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 text-left">
+        <ol type="1">
+            <li>Update and Configure the Raspberry Pi</li>
+            <ol type = "A">
+                <li>Boot the Pi (flash the memory card if needed)</li>
+                <li>Run <i>sudo raspi-config</i> and complete the following</li>
+                <ol type="I">
+                    <li>Change the default password</li>
+                    <li>Disable boot to desktop</li>
+                    <li>Use Advanced -> hostname to change the hostname of the Pi - make your own but remember it!</li>
+                    <li>Use Advanced -> Memory Split to allocate only 16 MB of RAM for the GPU - this improves performance as it gives the CPU more RAM!</li>
+                    <li>Enable SSH - once this is configured and you have set up your server, you'll want to disable this</li>
+                </ol>
+                <li>Download updates to Raspbian by running <i>sudo apt-get update</i>, <i>sudo apt-get updgrade</i>, and <i>sudo apt-get dist-upgrade</i></li>
+            </ol>
+            <li>Create a New User</li>
+            <ol type="A">
+                <li>Type and run the command <i>groups</i></li>
+                <li>Use the list of groups, excluding the group <i>pi</i>, to create a new user with this command: <br> sudo useradd -m -G (list of groups seperated by commas and no spaces!) (new username)</li>
+                <li>Set the password of this user with the command <i>sudo passwd (username you just added)</i></li>
+                <li>Logout of the Pi user using the <i>logout</i> command and log back in using the new username and password you just created</li>
+                <li>Delete the user 'pi' now using the command <i>sudo deluser --remove-all-files pi</i> NOTE: there will be alot of text when you run this, that is fine!</li>
+            </ol>
+            <li>Setup the RAID Array</li>
+            <ol type="A">
+                <li>Plug in the USB drives you desire to configure into a RAID array - be sure to only used a self powered hub if a hub is necessary!</li>
+                <li>Run <i>sudo apt-get install mdadm</i> to install the Linux RAID management software. Select the default "All" when promped in the installation.</li>
+                <li>Run <i>sudo fdisk -l</i> to check that the USB devices are properly located in the /dev/sd[letter]1 device table</li>
+                <li>To make a RAID array, use this example command as a template:<br><i>sudo mdadm -Cv /dev/md0 -l0 -n9 /dev/sd[abcdefghi]1</i>
+                <li>Note: This configures an array to be referenced from '/dev/md0' to be in a RAID 0 '-l0' configuration with 9 '-n9' devices located at sda1 - sdi1: 'sd[abcdefghi]1'</li>
+                <li>Format this array with the ext4 file system by running <i>sudo mkfs /dev/md0 -t ext4</i></li>
+                <li>Register this new array with your RAID software with this command <i>sudo mdadm --detail /dev/md0 >> /etc/mdadm/mdadm.conf</i></li>
+                <li>To ensure this array loads on boot navigate to the folder /etc/init.d/ and open a new file called startup with this command <i>sudo nano startup</i></li>
+                <li>Inside this file type <i>sudo mdadm --assemble /dev/md0</i></li>
+                <li>Exit nano by typeing CTRL-X and then Y. Now update the Pi's startup scripts to include your new script by running <i>update-rc.d /etc/startup defaults</i></li>
+                <li>Run the command in the startup script - <i>sudo mdadm --assemble /dev/md0</i></li>
+                <li><i>cd /</i> back to the base directory and <i>sudo mkdir websites</i> to contain the files for your server</li>
+                <li>Now mount the RAID array to this folder with this command <i>sudo mount /dev/md0 /websites</i>
+            </ol>
+            <li>Setup and Configure the Server</li>
+            <ol type="A">
+                <li>Download and install the required software packages with this command<br><i>sudo apt-get install nginx php5-fpm php5-curl php5-cli php5-mcrypt php5-mysql php-apc mysql-server</i></li>
+                <li>Setup the nginx web server</li>
+                <ol type="I">
+                    <li>Edit the configuration file using <i>sudo nano /etc/nginx/nginx.conf</i></li>
+                    <li>In the first few lines, change 'worker_processes' from 4 to 2</li>
+                    <li>Enable the "server_tokens off" line by uncommenting it</li>
+                    <li>Scroll down to the Gzip section and uncomment these lines</li>
+                    <ol type = "a">
+                        <li>gzip on;</li>
+                        <li>gzip_disable "msie6</li>
+                        <li>gzip_min_length 1100;</li>
+                        <li>gzip_vary on;</li>
+                        <li>gzip_proxied any;</li>
+                        <li>gzip_buffers 16 8k;</li>
+                        <li>gzip_comp_level 6;</li>
+                        <li>gzip_http_version 1.1;</li>
+                        <li>gzip_types (leave the list as it is, just uncomment!)</li>
+                    </ol>
+                    <li>In the "http" block add these four lines to kick denial of service attacks out</li>
+                    <ol type = "a">
+                        <li>client_header_timeout 10;</li>
+                        <li>client_body_timeout 10;</li>
+                        <li>keep_alive_timeout 10 10;</li>
+                        <li>send_timeout 10;</li>
+                    </ol>
+                    <li>Save and exit nano (CTRL-X, Y) then open another configuration file with the command <i>sudo nano /etc/nginx/fastcgi_params</i></li>
+                    <li>In the second block of text add this line anywhere <i>fastcgi_param PATH_INFO $fastcgi_path_info</i></li>
+                    <li>Save that file and exit</li>
+                </ol>
+                <li>Configure the PHP settings by opening <i>sudo nano /etc/php5/fpm/pool.d/www.conf</i> and uncommenting the lines that say <i>listen.owner</i>, or <i>listen.group</i></li>
+                <li>Secure the MySQL database by running <i>sudo mysql_secure_installation</i> and completing the steps</li>
+                <li>Make the directories your website will be stored in using these commands:<br><i>sudo mkdir -p /websites/secure/www</i>, and <i>sudo mkdir -p /websites/secure/logs</i><br>(NOTE my website is called 'secure', if you want to change that replace 'secure' with your site's name from here on out!)<br> </li>
+                <li><i>cd /websites/(your site name)/www</i> to add an "index.html" file with some basic html of your choosing for testing</li>
+                <li>Add an "index.php" file that contains a basic php script for testing</li>
+                <li>Change the ownership of (your site's) folder with the command <i>sudo chown www-data:www-data /websites/(your site)</i> - this allows web users access to some resources (like those web documents you just made to test with)</li>
+                <li>Now configure nginx to serve your file</li>
+                <ol type = "I">
+                    <li>To register your files with the nginx server you must create entries in the "sites-enabled" and "sites-available" nginx directories, so <i>cd /etc/nginx/sites-available</i></li>
+                    <li>Register your directories with the "available" part by running <i>sudo cp default secure</i></li>
+                    <li>Link the available file to the enabled file with this command <i>sudo ln -s /etc/nginx/sites-available/(sitename) /etc/nginx/sites-enabled/(sitename)</i></li>
+                    <li>Remove the default site with this command <i>sudo rm /etc/nginx/sites-enabled/default</i></li>	
+                </ol>
+                <li>Now fix the /etc/nginx/sites-available/(mysite) file</li>
+                <ol type="I">
+                    <li>Open this file and scan the document for lines that look similar to these to modify</li>
+                    <li><i>root /websites/(your site)/www</i></li>
+                    <li><i>index index.php index.html index.htm</i></li>
+                    <li><i>server_name (your site).local (your site).com</i></li>
+                    <li>Add these lines</li>
+                    <li><i>error_log /websites/(mysite)/logs/error.log error;</i></li>
+                    <li><i>access_log /websites/(mysite)/logs/access.log;</i></li>
+                    <li><i>location ~[^/].php(/|$){</i></li>
+                    <li><i>fastcgi_split_path_info 6(.+?.php)(/.*)$;</li>
+                    <li>if (!-f $document_root$fastcgi_script_name){</li>
+                    <li>return 404;</li>
+                    <li>}</li>
+                    <li>fastcgi_pass unix:/var/run/php5-fpm.sock;</li>
+                    <li>fastcgi_index index.php;</li>
+                    <li>include fastcgi_params;</li>
+                    <li>}</i></li>
+                </ol>
+                <li>Restart the nginx server with the command <i>sudo /etc/init.d/nginx relod</i></li>
+                <li>Now visit http://secure.local/index.html and http://secure.local/index.hph to test the server!</li>
+                <li>Finish the startup script by going back to /etc/init.d and adding these lines to the file "startup" that you previously made: <br><i>sudo mount /dev/md0 /websites</i>, and <i>sudo /etc/init.d/nginx reload</i></li>
+                <li>Finalize those changes by running the command <i>update-rc.d /etc/startup defaults</i></li>
+                <li>You have now setup your Secure Server!</li>
+            </ol>
+            <li>References</li>
+        </ol>
+        <!-- <p class="text-faded">To create a secure camera system that is capable of taking pictures and securely storing them offsite to a secondary location for later retrieval</p>
+        <a href="{{ site.baseurl }}/documents/ProposalPresentation.pdf" class="btn btn-default btn-xl">Proposal Presentation</a>
+        <a href="{{ site.baseurl }}/documents/Proposal.pdf" class="btn btn-default btn-xl">Proposal</a>
+        <a href="{{ site.baseurl }}/documents/Requirements.pdf" class="btn btn-default btn-xl">Requirements</a>
+        <a href="{{ site.baseurl }}/documents/GanttChart.pdf" class="btn btn-default btn-xl">Gantt Chart</a> -->
+      </div>
+    </div>
+  </div>
+</section>
