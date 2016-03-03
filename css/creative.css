@@ -475,6 +475,91 @@ img::-moz-selection {
     background: 0 0;
 }
 
+@media screen and (min-width: 310px) {
+  .img-responsive-prj1 {
+    content:url('/SecureCameraCapture/img/portfolio/small/1.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 620px) {
+  .img-responsive-prj1 {
+    content:url('/SecureCameraCapture/img/portfolio/big/1.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 310px) {
+  .img-responsive-prj2 {
+    content:url('/SecureCameraCapture/img/portfolio/small/2.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 620px) {
+  .img-responsive-prj2 {
+    content:url('/SecureCameraCapture/img/portfolio/big/2.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 310px) {
+  .img-responsive-prj3 {
+    content:url('/SecureCameraCapture/img/portfolio/small/3.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 620px) {
+  .img-responsive-prj3 {
+    content:url('/SecureCameraCapture/img/portfolio/big/3.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 310px) {
+  .img-responsive-prj4 {
+    content:url('/SecureCameraCapture/img/portfolio/small/4.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 620px) {
+  .img-responsive-prj4 {
+    content:url('/SecureCameraCapture/img/portfolio/big/4.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 310px) {
+  .img-responsive-prj5 {
+    content:url('/SecureCameraCapture/img/portfolio/small/5.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 620px) {
+  .img-responsive-prj5 {
+    content:url('/SecureCameraCapture/img/portfolio/big/5.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 310px) {
+  .img-responsive-prj6 {
+    content:url('/SecureCameraCapture/img/portfolio/small/6.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+@media screen and (min-width: 620px) {
+  .img-responsive-prj6 {
+    content:url('/SecureCameraCapture/img/portfolio/big/6.jpg');
+    width: 650;
+    height: 350;
+  }
+}
+
 body {
     webkit-tap-highlight-color: #222;
 }
